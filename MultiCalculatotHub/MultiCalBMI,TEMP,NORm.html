@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Calculator Hub</title>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --primary-dark: #3d5ad1;
+            --secondary-color: #6c63ff;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+            --border-color: #e2e8f0;
+            --success-color: #48bb78;
+            --warning-color: #ed8936;
+            --danger-color: #e53e3e;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            color: var(--text-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .selector {
+            background-color: var(--light-bg);
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .selector select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            transition: border-color 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+        }
+
+        .selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .calculator-container {
+            padding: 30px;
+        }
+
+        /* Calculator specific styles */
+        .calculator {
+            display: none;
+        }
+
+        .calculator.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: var(--light-bg);
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .bmi-result {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .bmi-result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .bmi-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .bmi-category {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .healthy-range {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .underweight {
+            background-color: #EBF8FF;
+            color: #2B6CB0;
+        }
+
+        .normal {
+            background-color: #F0FFF4;
+            color: #2F855A;
+        }
+
+        .overweight {
+            background-color: #FFFAF0;
+            color: #C05621;
+        }
+
+        .obese {
+            background-color: #FFF5F5;
+            color: #C53030;
+        }
+
+        .units-toggle {
+            display: flex;
+            margin-bottom: 20px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .unit-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            border: none;
+            background: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .unit-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Switch styling */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .switch-group label {
+            margin: 0 10px;
+            cursor: pointer;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .error {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .two-cols {
+            display: flex;
+            gap: 15px;
+        }
+
+        .two-cols .input-group {
+            flex: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 10px;
+            }
+
+            .calculator-container {
+                padding: 20px;
+            }
+
+            .two-cols {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Multi-Calculator Hub</h1>
+        <p class="subtitle">Your all-in-one calculator solution</p>
+    </header>
+
+    <div class="container">
+        <div class="selector">
+            <label for="calculator-select">Select Calculator Type:</label>
+            <select id="calculator-select">
+                <option value="normal">Normal Calculator</option>
+                <option value="bmi">BMI Calculator</option>
+                <option value="temperature">Temperature Converter</option>
+            </select>
+        </div>
+
+        <div class="calculator-container">
+            <!-- Normal Calculator -->
+            <div class="calculator active" id="normal-calculator">
+                <h2>Normal Calculator</h2>
+                <div class="input-group">
+                    <label for="num1">First Number</label>
+                    <input type="number" id="num1" placeholder="Enter first number">
+                </div>
+                
+                <div class="input-group">
+                    <label for="operation">Operation</label>
+                    <select id="operation">
+                        <option value="add">Addition (+)</option>
+                        <option value="subtract">Subtraction (-)</option>
+                        <option value="multiply">Multiplication (×)</option>
+                        <option value="divide">Division (÷)</option>
+                        <option value="power">Power (^)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="num2">Second Number</label>
+                    <input type="number" id="num2" placeholder="Enter second number">
+                </div>
+                
+                <button id="calculate-normal">Calculate</button>
+                
+                <div class="result" id="normal-result">
+                    <h3>Result: <span id="normal-result-value"></span></h3>
+                </div>
+            </div>
+
+            <!-- BMI Calculator -->
+            <div class="calculator" id="bmi-calculator">
+                <h2>BMI Calculator</h2>
+                
+                <div class="units-toggle">
+                    <button class="unit-btn active" id="metric-btn">Metric</button>
+                    <button class="unit-btn" id="imperial-btn">Imperial</button>
+                </div>
+                
+                <div id="metric-inputs">
+                    <div class="input-group">
+                        <label for="height-cm">Height (cm)</label>
+                        <input type="number" id="height-cm" placeholder="Enter height">
+                        <div class="error" id="height-error">Please enter a valid height</div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="weight-kg">Weight (kg)</label>
+                        <input type="number" id="weight-kg" placeholder="Enter weight">
+                        <div class="error" id="weight-error">Please enter a valid weight</div>
+                    </div>
+                </div>
+                
+                <div id="imperial-inputs" style="display: none;">
+                    <div class="two-cols">
+                        <div class="input-group">
+                            <label for="height-ft">Height (ft)</label>
+                            <input type="number" id="height-ft" placeholder="Feet">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="height-in">Height (in)</label>
+                            <input type="number" id="height-in" placeholder="Inches">
+                        </div>
+                    </div>
+                    <div class="error" id="height-error-imperial">Please enter a valid height</div>
+                    
+                    <div class="input-group">
+                        <label for="weight-lb">Weight (lb)</label>
+                        <input type="number" id="weight-lb" placeholder="Enter weight">
+                        <div class="error" id="weight-error-imperial">Please enter a valid weight</div>
+                    </div>
+                </div>
+                
+                <button id="calculate-bmi">Calculate BMI</button>
+                
+                <div class="bmi-result" id="bmi-result">
+                    <div class="bmi-value" id="bmi-value"></div>
+                    <div class="bmi-category" id="bmi-category"></div>
+                    <div class="healthy-range">Healthy BMI range: 18.5 - 24.9</div>
+                </div>
+            </div>
+
+            <!-- Temperature Converter -->
+            <div class="calculator" id="temperature-calculator">
+                <h2>Temperature Converter</h2>
+                
+                <div class="input-group">
+                    <label for="temp-input">Temperature</label>
+                    <input type="number" id="temp-input" placeholder="Enter temperature">
+                    <div class="error" id="temp-error">Please enter a valid temperature</div>
+                </div>
+                
+                <div class="switch-group">
+                    <label>Celsius</label>
+                    <label class="switch">
+                        <input type="checkbox" id="temp-unit-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <label>Fahrenheit</label>
+                </div>
+                
+                <button id="convert-temp">Convert</button>
+                
+                <div class="result" id="temp-result">
+                    <h3>Result: <span id="temp-result-value"></span></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Multi-Calculator Hub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // DOM elements for calculator selection
+        const calculatorSelect = document.getElementById('calculator-select');
+        const calculators = document.querySelectorAll('.calculator');
+
+        // Normal calculator elements
+        const normalCalculator = document.getElementById('normal-calculator');
+        const num1Input = document.getElementById('num1');
+        const num2Input = document.getElementById('num2');
+        const operationSelect = document.getElementById('operation');
+        const calculateNormalBtn = document.getElementById('calculate-normal');
+        const normalResult = document.getElementById('normal-result');
+        const normalResultValue = document.getElementById('normal-result-value');
+
+        // BMI calculator elements
+        const bmiCalculator = document.getElementById('bmi-calculator');
+        const metricBtn = document.getElementById('metric-btn');
+        const imperialBtn = document.getElementById('imperial-btn');
+        const metricInputs = document.getElementById('metric-inputs');
+        const imperialInputs = document.getElementById('imperial-inputs');
+        const calculateBmiBtn = document.getElementById('calculate-bmi');
+        const bmiResult = document.getElementById('bmi-result');
+        const bmiValueElement = document.getElementById('bmi-value');
+        const bmiCategoryElement = document.getElementById('bmi-category');
+
+        // BMI input elements
+        const heightCm = document.getElementById('height-cm');
+        const weightKg = document.getElementById('weight-kg');
+        const heightFt = document.getElementById('height-ft');
+        const heightIn = document.getElementById('height-in');
+        const weightLb = document.getElementById('weight-lb');
+
+        // BMI error elements
+        const heightError = document.getElementById('height-error');
+        const weightError = document.getElementById('weight-error');
+        const heightErrorImperial = document.getElementById('height-error-imperial');
+        const weightErrorImperial = document.getElementById('weight-error-imperial');
+
+        // Temperature converter elements
+        const temperatureCalculator = document.getElementById('temperature-calculator');
+        const tempInput = document.getElementById('temp-input');
+        const tempUnitToggle = document.getElementById('temp-unit-toggle');
+        const convertTempBtn = document.getElementById('convert-temp');
+        const tempResult = document.getElementById('temp-result');
+        const tempResultValue = document.getElementById('temp-result-value');
+        const tempError = document.getElementById('temp-error');
+
+        // Current BMI unit system
+        let isMetric = true;
+
+        // Calculator selection
+        calculatorSelect.addEventListener('change', function() {
+            // Hide all calculators
+            calculators.forEach(calc => {
+                calc.classList.remove('active');
+            });
+            
+            // Show selected calculator
+            const selectedCalculator = document.getElementById(this.value + '-calculator');
+            selectedCalculator.classList.add('active');
+            
+            // Hide results
+            normalResult.classList.remove('show');
+            bmiResult.classList.remove('show');
+            tempResult.classList.remove('show');
+        });
+
+        // Normal Calculator
+        calculateNormalBtn.addEventListener('click', function() {
+            const num1 = parseFloat(num1Input.value);
+            const num2 = parseFloat(num2Input.value);
+            const operation = operationSelect.value;
+            
+            if (isNaN(num1) || isNaN(num2)) {
+                alert('Please enter valid numbers');
+                return;
+            }
+            
+            let result;
+            
+            switch(operation) {
+                case 'add':
+                    result = num1 + num2;
+                    break;
+                case 'subtract':
+                    result = num1 - num2;
+                    break;
+                case 'multiply':
+                    result = num1 * num2;
+                    break;
+                case 'divide':
+                    if (num2 === 0) {
+                        alert('Cannot divide by zero');
+                        return;
+                    }
+                    result = num1 / num2;
+                    break;
+                case 'power':
+                    result = Math.pow(num1, num2);
+                    break;
+            }
+            
+            normalResultValue.textContent = result;
+            normalResult.classList.add('show');
+        });
+
+        // BMI Calculator
+        // Event listeners for unit buttons
+        metricBtn.addEventListener('click', () => {
+            setUnitSystem(true);
+        });
+
+        imperialBtn.addEventListener('click', () => {
+            setUnitSystem(false);
+        });
+
+        // Set the active unit system
+        function setUnitSystem(metric) {
+            isMetric = metric;
+            
+            if (metric) {
+                metricBtn.classList.add('active');
+                imperialBtn.classList.remove('active');
+                metricInputs.style.display = 'block';
+                imperialInputs.style.display = 'none';
+            } else {
+                metricBtn.classList.remove('active');
+                imperialBtn.classList.add('active');
+                metricInputs.style.display = 'none';
+                imperialInputs.style.display = 'block';
+            }
+            
+            // Hide the result when switching units
+            bmiResult.classList.remove('show');
+        }
+
+        // Calculate BMI
+        calculateBmiBtn.addEventListener('click', () => {
+            // Reset errors
+            heightError.style.display = 'none';
+            weightError.style.display = 'none';
+            heightErrorImperial.style.display = 'none';
+            weightErrorImperial.style.display = 'none';
+            
+            let bmi;
+            let isValid = true;
+            
+            if (isMetric) {
+                // Validate metric inputs
+                const height = parseFloat(heightCm.value);
+                const weight = parseFloat(weightKg.value);
+                
+                if (!height || height <= 0 || height > 300) {
+                    heightError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!weight || weight <= 0 || weight > 500) {
+                    weightError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (isValid) {
+                    // Calculate BMI using metric formula: weight(kg) / (height(m) * height(m))
+                    const heightInMeters = height / 100;
+                    bmi = weight / (heightInMeters * heightInMeters);
+                }
+            } else {
+                // Validate imperial inputs
+                const feet = parseFloat(heightFt.value) || 0;
+                const inches = parseFloat(heightIn.value) || 0;
+                const pounds = parseFloat(weightLb.value);
+                
+                const totalInches = (feet * 12) + inches;
+                
+                if (!totalInches || totalInches <= 0 || totalInches > 120) {
+                    heightErrorImperial.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!pounds || pounds <= 0 || pounds > 1000) {
+                    weightErrorImperial.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (isValid) {
+                    // Calculate BMI using imperial formula: (weight(lb) * 703) / (height(in) * height(in))
+                    bmi = (pounds * 703) / (totalInches * totalInches);
+                }
+            }
+            
+            if (isValid) {
+                displayBmiResult(bmi);
+            }
+        });
+
+        // Display the BMI result
+        function displayBmiResult(bmi) {
+            // Round to 1 decimal place
+            const roundedBmi = Math.round(bmi * 10) / 10;
+            
+            // Set BMI value
+            bmiValueElement.textContent = `BMI = ${roundedBmi}`;
+            
+            // Determine BMI category and set appropriate styles
+            let category, categoryClass;
+            
+            if (bmi < 18.5) {
+                category = "Underweight";
+                categoryClass = "underweight";
+            } else if (bmi < 25) {
+                category = "Normal weight";
+                categoryClass = "normal";
+            } else if (bmi < 30) {
+                category = "Overweight";
+                categoryClass = "overweight";
+            } else {
+                category = "Obese";
+                categoryClass = "obese";
+            }
+            
+            bmiCategoryElement.textContent = category;
+            
+            // Remove all category classes and add the appropriate one
+            bmiResult.classList.remove('underweight', 'normal', 'overweight', 'obese');
+            bmiResult.classList.add(categoryClass);
+            
+            // Show the result
+            bmiResult.classList.add('show');
+        }
+
+        // Temperature Converter
+        convertTempBtn.addEventListener('click', () => {
+            // Reset error
+            tempError.style.display = 'none';
+            
+            const temperature = parseFloat(tempInput.value);
+            
+            if (isNaN(temperature)) {
+                tempError.style.display = 'block';
+                return;
+            }
+            
+            let result;
+            if (tempUnitToggle.checked) {
+                // Convert from Fahrenheit to Celsius
+                result = (temperature - 32) * (5/9);
+                tempResultValue.textContent = `${temperature}°F = ${result.toFixed(1)}°C`;
+            } else {
+                // Convert from Celsius to Fahrenheit
+                result = (temperature * (9/5)) + 32;
+                tempResultValue.textContent = `${temperature}°C = ${result.toFixed(1)}°F`;
+            }
+            
+            tempResult.classList.add('show');
+        });
+    </script>
+</body>
+</html>
